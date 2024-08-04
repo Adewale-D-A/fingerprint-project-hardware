@@ -185,14 +185,15 @@ void displayRegistrationPage() {
     instantMessageLine3Display("Stored!");
     Serial.println(id);
     Serial.println("Stored!");  //TODO: Print ID to screen, then wait for a button click to register another user
-    delay(2000);
+    delay(3000);
     while (!isButtonPressed) {
       Serial.println("Click button to register another user");  //TODO: Print ID to screen
 
       yellowLED();
-      instantMessageDisplay("Click button to");
-      instantMessageLine2Display("register another ");
-      instantMessageLine3Display("user");
+      instantMessageDisplay(regId);
+      instantMessageLine2Display("Click button to");
+      instantMessageLine3Display("register another ");
+      instantMessageLine4Display("user");
       buttonInterrupt();
     }
   } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
@@ -227,6 +228,7 @@ void displayRegistrationPage() {
 void displayVerificationPage() {
   verificationHeaderDisplay();
   greenLED();
+  buzzerOff();
 
   isButtonPressed = false;
   uint8_t p = finger.getImage();
@@ -323,7 +325,10 @@ void displayVerificationPage() {
         instantMessageDisplay("Fingerprints did");
         instantMessageLine2Display("not match");
         redLED();
-        delay(2000);
+        buzzerOn();
+        delay(1000);
+        buzzerOff();
+        delay(1000);
       } else {
         Serial.println("Unknown error");
         redLED();
@@ -331,4 +336,69 @@ void displayVerificationPage() {
       }
     }
   }
+}
+
+
+
+// Function to display delete page
+void displayDeletingUserID() {
+  deleteUserIdDisplay();
+  greenLED();
+
+  isButtonPressed = false;
+  while (deletFingerprintIdData == "0") {
+    deletableIdResponse = getDeletableID();
+    deletFingerprintIdData = deletableIdResponse;
+    delay(5000);
+  }
+
+  id = deletFingerprintIdData.toInt();  //readnumber();
+  instantMessageDisplay("Deleting ID");
+  instantMessageLine2Display(String(id));
+  deleteFingerprint(id);
+  removeIdFromServer = String(id);
+  matricNumber = postRemoveId(removeIdFromServer);
+  instantMessageDisplay("User with Mat No");
+  instantMessageLine2Display(matricNumber);
+  instantMessageLine3Display("removed!");
+  delay(2000);
+  deletFingerprintIdData = "0";
+  while (!isButtonPressed) {
+    Serial.println("Click button to delete another user");  //TODO: Print ID to screen
+    instantMessageLine3Display("Click to delete");
+    instantMessageLine4Display("another user");
+    yellowLED();
+    buttonInterrupt();
+  }
+}
+
+
+// Function to display delete page
+void displayDeletePage() {
+  deleteAllUsersDisplay();
+  redLED();
+
+  while (clearFingerprintData != "1") {
+    systemPurgeReply = getSystemPurgePermission();
+    clearFingerprintData = systemPurgeReply;
+    delay(5000);
+  };
+
+  finger.emptyDatabase();
+  instantMessageDisplay(String(finger.templateCount));
+  instantMessageLine2Display("IDs Deleted!");
+  greenLED();
+  systemPurgeStatus = "1";  //system purge status - either "1" or "0"
+  serverPurgedStatus = postSystemPurgeUpdate(systemPurgeStatus);
+  instantMessageDisplay("Server responded with");
+  instantMessageLine2Display(serverPurgedStatus);
+  instantMessageLine3Display("Status");
+  clearFingerprintData = "0";
+}
+
+//DELECTING USER ID POST FUNCTION//
+unsigned int deleteFingerprint(unsigned int id) {
+  unsigned int p = -1;
+  p = finger.deleteModel(id);
+  return p;
 }

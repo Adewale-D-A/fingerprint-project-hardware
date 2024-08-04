@@ -19,6 +19,7 @@
 
 // Define pin for the button
 #define BUTTON_PIN 8
+#define BUZZER_PIN 7
 
 #define PSU_PIN 9
 #define NEOPIXEL_PIN 48
@@ -78,13 +79,14 @@ void setup() {
   pixels.begin();
   pixels.setBrightness(BRIGHTNESS);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BUZZER_PIN, OUTPUT);
   pinMode(PSU_PIN, OUTPUT);
   digitalWrite(PSU_PIN, LOW);
 
   // Initialize display
   u8g2.begin();
   u8g2.enableUTF8Print();
-  
+
   // Attach buttonInterrupt() function to the interrupt vector for the button pin
   attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonInterrupt, CHANGE);
   // Initialize fingerprint sensor
@@ -107,8 +109,8 @@ void loop() {
   } else if (deviceMode == "2") {
     displayVerificationPage();
   } else if (deviceMode == "3") {
-    deleteUserIdDisplay();
+    displayDeletingUserID();
   } else if (deviceMode == "4") {
-    deleteAllUsersDisplay();
+    displayDeletePage();
   }
 }
